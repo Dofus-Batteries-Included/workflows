@@ -9,8 +9,8 @@ on:
         description: The name of the archive containing the metadata.json file
       metadata_path:
         type: string
-        required: true
         description: The path to the metadata.json file in the archive
+        default: metadata.json
   workflow_dispatch:
 
 jobs:
