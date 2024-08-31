@@ -7,6 +7,10 @@ on:
         type: string
         required: true
         description: The name of the archive containing the metadata.json file
+      metadata_path:
+        type: string
+        required: true
+        description: The path to the metadata.json file in the archive
   workflow_dispatch:
 
 jobs:
@@ -45,12 +49,12 @@ jobs:
           $null=Invoke-WebRequest -Uri "$Url" -OutFile ${{ inputs.archive_name }}
           $null=7z x ${{ inputs.archive_name }} -orelease
           
-          if (!(Test-Path 'release/DofusBatteriesIncluded/metadata.json')) {
+          if (!(Test-Path 'release/${{ inputs.metadata_path }}')) {
             Write-Output "::error::Could not find metadata file in last release: metadata.json not found in ${{ inputs.archive_name }}."
             exit 1
           }
           
-          $Metadata=(Get-Content 'release/DofusBatteriesIncluded/metadata.json' | Out-String | ConvertFrom-Json)
+          $Metadata=(Get-Content 'release/${{ inputs.metadata_path }}' | Out-String | ConvertFrom-Json)
           echo "Last release version: $($Metadata.GameVersion)." >> $Env:GITHUB_STEP_SUMMARY
           echo "version=$($Metadata.GameVersion)" >> $Env:GITHUB_OUTPUT
           echo "last_release_name=$($Response.tag_name)" >> $Env:GITHUB_OUTPUT
