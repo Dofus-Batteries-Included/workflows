@@ -35,7 +35,7 @@ jobs:
           $AssetsNamedRelease=$Response.assets | Where-Object {$_.name -eq "${{ github.event.inputs.message }}"}
           
           if ($AssetsNamedRelease.Count -eq 0) {
-            Write-Output "::error::Could not find release archive in last release" 
+            Write-Output "::error::Could not find release archive in last release: ${{ github.event.inputs.message }} not found." 
             exit 1
           }
           
@@ -46,7 +46,7 @@ jobs:
           $null=7z x ${{ github.event.inputs.message }} -orelease
           
           if (!(Test-Path 'release/DofusBatteriesIncluded/metadata.json')) {
-            Write-Output "::error::Could not find metadata file in last release" 
+            Write-Output "::error::Could not find metadata file in last release: metadata.json not found in ${{ github.event.inputs.message }}."
             exit 1
           }
           
