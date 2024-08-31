@@ -32,21 +32,21 @@ jobs:
           ${{ steps.fetch_last_release.outputs.data }}
           '@
           $Response=$ResponseString | ConvertFrom-Json
-          $AssetsNamedRelease=$Response.assets | Where-Object {$_.name -eq "${{ github.event.inputs.archive_name }}"}
+          $AssetsNamedRelease=$Response.assets | Where-Object {$_.name -eq "${{ inputs.archive_name }}"}
           
           if ($AssetsNamedRelease.Count -eq 0) {
-            Write-Output "::error::Could not find release archive in last release: ${{ github.event.inputs.archive_name }} not found." 
+            Write-Output "::error::Could not find release archive in last release: ${{ inputs.archive_name }} not found." 
             exit 1
           }
           
           $ReleaseAsset=$AssetsNamedRelease[0]
           $Url=$ReleaseAsset.browser_download_url
           echo "Asset file: $Url"
-          $null=Invoke-WebRequest -Uri "$Url" -OutFile ${{ github.event.inputs.archive_name }}
-          $null=7z x ${{ github.event.inputs.archive_name }} -orelease
+          $null=Invoke-WebRequest -Uri "$Url" -OutFile ${{ inputs.archive_name }}
+          $null=7z x ${{ inputs.archive_name }} -orelease
           
           if (!(Test-Path 'release/DofusBatteriesIncluded/metadata.json')) {
-            Write-Output "::error::Could not find metadata file in last release: metadata.json not found in ${{ github.event.inputs.archive_name }}."
+            Write-Output "::error::Could not find metadata file in last release: metadata.json not found in ${{ inputs.archive_name }}."
             exit 1
           }
           
