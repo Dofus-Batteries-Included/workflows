@@ -2,6 +2,10 @@ name: Create release on game update
 
 on:
   workflow_call:
+    inputs:
+      archive_name:
+        required: true
+        description: The name of the archive containing the metadata.json file
   workflow_dispatch:
 
 jobs:
@@ -27,7 +31,7 @@ jobs:
           ${{ steps.fetch_last_release.outputs.data }}
           '@
           $Response=$ResponseString | ConvertFrom-Json
-          $AssetsNamedRelease=$Response.assets | Where-Object {$_.name -eq "release.zip"}
+          $AssetsNamedRelease=$Response.assets | Where-Object {$_.name -eq "${{ github.event.inputs.message }}"}
           
           if ($AssetsNamedRelease.Count -eq 0) {
             Write-Output "::error::Could not find release archive in last release" 
@@ -37,8 +41,8 @@ jobs:
           $ReleaseAsset=$AssetsNamedRelease[0]
           $Url=$ReleaseAsset.browser_download_url
           echo "Asset file: $Url"
-          $null=Invoke-WebRequest -Uri "$Url" -OutFile release.zip
-          $null=7z x release.zip -orelease
+          $null=Invoke-WebRequest -Uri "$Url" -OutFile ${{ github.event.inputs.message }}
+          $null=7z x ${{ github.event.inputs.message }} -orelease
           
           if (!(Test-Path 'release/DofusBatteriesIncluded/metadata.json')) {
             Write-Output "::error::Could not find metadata file in last release" 
