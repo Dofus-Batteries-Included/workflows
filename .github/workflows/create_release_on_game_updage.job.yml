@@ -12,10 +12,10 @@ on:
         description: The path to the metadata.json file in the archive
         default: metadata.json
     secrets:
-      GITHUB_TOKEN:
+      ACTIONS_PAT:
         type: string
         required: true
-        description: The GITHUB_TOKEN to use
+        description: The PAT to generate the release note
   workflow_dispatch:
 
 jobs:
