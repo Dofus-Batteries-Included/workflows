@@ -13,9 +13,7 @@ on:
         default: metadata.json
     secrets:
       ACTIONS_PAT:
-        type: string
         required: true
-        description: The PAT to generate the release note
   workflow_dispatch:
 
 jobs:
