@@ -11,6 +11,11 @@ on:
         type: string
         description: The path to the metadata.json file in the archive
         default: metadata.json
+    secrets:
+      GITHUB_TOKEN:
+        type: string
+        required: true
+        description: The GITHUB_TOKEN to use
   workflow_dispatch:
 
 jobs:
