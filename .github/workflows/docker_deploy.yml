@@ -1,0 +1,41 @@
+name: SSH docker compose
+
+on: 
+  workflow_call:
+    inputs:
+      directory:
+        type: string
+        description: The base directory.
+        default: .
+    
+    secrets:
+      ssh_host:
+        required: true
+      ssh_user:
+        required: true
+      ssh_key:
+        required: true
+        
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.ssh_key }}" > ~/.ssh/prod.key
+          chmod 600 ~/.ssh/prod.key
+          
+          echo "Host prod" > ~/.ssh/config
+          echo "  HostName ${{ secrets.ssh_host }}" >> ~/.ssh/config
+          echo "  User ${{ secrets.ssh_user }}" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/prod.key" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          
+      - name: Docker compose pull
+        run: |
+          ssh prod 'cd ${{ inputs.directory }}; docker compose pull'
+          
+      - name: Docker compose up
+        run: |
+          ssh prod 'cd ${{ inputs.directory }}; docker compose up -d'

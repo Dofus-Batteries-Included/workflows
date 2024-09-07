@@ -1,0 +1,87 @@
+name: Docker Build & Publish
+
+on:
+  workflow_call:
+    inputs:              
+      docker_image_name:
+        type: string
+        required: true
+        description: The name of the Docker image to produce
+
+      docker_file:
+        type: string
+        description: The path of the Dockerfile to use
+        default: Dockerfile
+
+      directory:
+        type: string
+        description: The base directory
+        default: .
+    
+    outputs:
+      latest_has_changed:
+        description: True if the 'latest' tag has been applied to the published version.
+        value: ${{ jobs.job.outputs.latest_has_changed }}
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      latest_has_changed: ${{ steps.push_image.outputs.latest_should_change }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Build the Docker image
+        run: |
+          docker build ${{ inputs.directory }} --file ${{ inputs.docker_file }} --tag ${{ inputs.docker_image_name }} --label "runnumber=${GITHUB_RUN_ID}"
+      
+      - name: Install MinVer CLI
+        run: dotnet tool install --global minver-cli
+
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION="$(minver -v t -t v)"
+          echo "Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image
+        id: push_image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/${{ inputs.docker_image_name }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          VERSION=${{ steps.get_version.outputs.version }}
+          LATEST_SHOULD_CHANGE=${{ !contains(steps.get_version.outputs.version, '-') }}
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          echo LATEST_SHOULD_CHANGE=$LATEST_SHOULD_CHANGE
+          docker tag ${{ inputs.docker_image_name }} $IMAGE_ID:$VERSION 
+          docker push $IMAGE_ID:$VERSION
+          echo "latest_should_change=$LATEST_SHOULD_CHANGE" >> $GITHUB_OUTPUT
+      
+      - name: Push latest (if not pre-release)
+        if: ${{ steps.push_image.outputs.latest_should_change == 'true' }}
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/${{ inputs.docker_image_name }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=latest
+          docker tag ${{ inputs.docker_image_name }} $IMAGE_ID:latest 
+          docker push $IMAGE_ID:latest
+
+permissions:
+  packages: write

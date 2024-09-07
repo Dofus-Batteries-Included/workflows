@@ -118,17 +118,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get latest tag
-        id: fetch_latest_tag
-        if: ${{ steps.should_continue.outputs.create_release }}
-        uses: WyriHaximus/github-action-get-previous-tag@v1
+      - name: Install MinVer CLI
+        run: dotnet tool install --global minver-cli
+
+      - name: Get current version
+        id: get_version
+        run: |
+          $Version="$(minver -v t -t v -i)"
+          echo "Version: $Version"
+          echo "version=$Version" >> $Env:GITHUB_OUTPUT
 
       - name: Bump version
         id: bump_version
         if: ${{ steps.should_continue.outputs.create_release }}
         run: |
-          $Version="${{ steps.fetch_latest_tag.outputs.tag }}"
-          $Regex="v(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)(?<prerelease>-.*)?"
+          $Version="${{ steps.get_version.outputs.version }}"
+          $Regex="(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)(?<prerelease>-.*)?"
           if ($Version -notmatch $Regex) {
             throw "$Version is not a valid version number"
           }
