@@ -45,30 +45,34 @@ jobs:
           $CytrusGameVersion=$(cytrus-v6 version -g dofus -b)
           echo "dofus_version=$($CytrusGameVersion.Split(`"_`")[1])" >> $Env:GITHUB_OUTPUT
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: Dofus-Batteries-Included/workflows
-          fetch-depth: 0
-
-      - name: Download BepInEx
-        run: curl https://builds.bepinex.dev/projects/bepinex_be/697/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.697%2B5362580.zip -o BepInEx.zip
-
       - name: Cache game files
         id: cache-game-files
         uses: actions/cache@v4
         with:
           path: dofus-beta
           key: dofus-beta-${{ steps.read_dofus_version.outputs.dofus_version }}
+          
+      - name: Checkout
+        if: steps.cache-game-files.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: Dofus-Batteries-Included/workflows
+          fetch-depth: 0
+
+      - name: Download BepInEx
+        if: steps.cache-game-files.outputs.cache-hit != 'true'
+        run: curl https://builds.bepinex.dev/projects/bepinex_be/697/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.697%2B5362580.zip -o BepInEx.zip
 
       - name: Download latest game files
         if: steps.cache-game-files.outputs.cache-hit != 'true'
         run: cytrus-v6 download -g dofus -b -s "Dofus.exe,*.dll,Dofus_Data/*,Dofus_Data/il2cpp_data/**/*,Dofus_Data/Plugins/**/*,Dofus_Data/Resources/**/*" -o dofus-beta # Use beta for now
 
       - name: Extract BepInEx
+        if: steps.cache-game-files.outputs.cache-hit != 'true'
         run: 7z x BepInEx.zip -odofus-beta -aoa
 
       - name: Run game once
+        if: steps.cache-game-files.outputs.cache-hit != 'true'
         run: node scripts/bepinex-run-until "dofus-beta/Dofus.exe" "Chainloader startup complete"
         timeout-minutes: 10
 
