@@ -78,7 +78,7 @@ jobs:
       - name: Read current game version
         id: fetch_dofus_version
         run: |
-          $CytrusGameVersion=$(cytrus-v6 version -g dofus -b)
+          $CytrusGameVersion=$(cytrus-v6 version -g dofus)
           $Version=$CytrusGameVersion.Split("_")[1]
           echo "Current game version: $Version." >> $Env:GITHUB_STEP_SUMMARY
           echo "dofus_version=$Version" >> $Env:GITHUB_OUTPUT

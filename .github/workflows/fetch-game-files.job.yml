@@ -42,7 +42,7 @@ jobs:
       - name: Read current game version
         id: read_dofus_version
         run: |
-          $CytrusGameVersion=$(cytrus-v6 version -g dofus -b)
+          $CytrusGameVersion=$(cytrus-v6 version -g dofus)
           echo "dofus_version=$($CytrusGameVersion.Split(`"_`")[1])" >> $Env:GITHUB_OUTPUT
 
       - name: Checkout
@@ -55,8 +55,8 @@ jobs:
         id: cache-game-files
         uses: actions/cache@v4
         with:
-          path: dofus-beta
-          key: dofus-beta-${{ steps.read_dofus_version.outputs.dofus_version }}
+          path: dofus
+          key: dofus-${{ steps.read_dofus_version.outputs.dofus_version }}
 
       - name: Download BepInEx
         if: steps.cache-game-files.outputs.cache-hit != 'true'
@@ -64,20 +64,20 @@ jobs:
 
       - name: Download latest game files
         if: steps.cache-game-files.outputs.cache-hit != 'true'
-        run: cytrus-v6 download -g dofus -b -s "Dofus.exe,*.dll,Dofus_Data/*,Dofus_Data/il2cpp_data/**/*,Dofus_Data/Plugins/**/*,Dofus_Data/Resources/**/*" -o dofus-beta # Use beta for now
+        run: cytrus-v6 download -g dofus -s "Dofus.exe,*.dll,Dofus_Data/*,Dofus_Data/il2cpp_data/**/*,Dofus_Data/Plugins/**/*,Dofus_Data/Resources/**/*" -o dofus
 
       - name: Extract BepInEx
         if: steps.cache-game-files.outputs.cache-hit != 'true'
-        run: 7z x BepInEx.zip -odofus-beta -aoa
+        run: 7z x BepInEx.zip -odofus -aoa
 
       - name: Run game once
         if: steps.cache-game-files.outputs.cache-hit != 'true'
-        run: node scripts/bepinex-run-until "dofus-beta/Dofus.exe" "Chainloader startup complete"
+        run: node scripts/bepinex-run-until "dofus/Dofus.exe" "Chainloader startup complete"
         timeout-minutes: 10
 
       - name: Read game build id
         id: read_dofus_build_id
-        run: echo "dofus_build_id=$(node scripts/read-build-guid.js dofus-beta/Dofus_Data/boot.config)" >> $Env:GITHUB_OUTPUT
+        run: echo "dofus_build_id=$(node scripts/read-build-guid.js dofus/Dofus_Data/boot.config)" >> $Env:GITHUB_OUTPUT
 
       - name: Display build information
         run: |
@@ -88,4 +88,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: interop-assemblies
-          path: dofus-beta/BepInEx/interop/*
+          path: dofus/BepInEx/interop/*
