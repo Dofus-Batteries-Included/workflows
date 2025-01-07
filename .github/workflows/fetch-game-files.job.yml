@@ -30,19 +30,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: latest
-        
-      - name: Setup Github NPM registry for @dofus-batteries-included namespace
-        run: |
-          echo @dofus-batteries-included:registry=https://npm.pkg.github.com > ~/.npmrc
-          echo //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }} >> ~/.npmrc
 
       - name: Install Cytrus v6
-        run: npm i @dofus-batteries-included/cytrus-v6 -g
+        run: npm i cytrus-v6 -g
 
       - name: Read current game version
         id: read_dofus_version
         run: |
-          $CytrusGameVersion=$(cytrus-v6 version -g dofus)
+          $CytrusGameVersion=$(cytrus-v6 version --game dofus --release dofus3)
           echo "dofus_version=$($CytrusGameVersion.Split(`"_`")[1])" >> $Env:GITHUB_OUTPUT
 
       - name: Checkout
@@ -64,7 +59,7 @@ jobs:
 
       - name: Download latest game files
         if: steps.cache-game-files.outputs.cache-hit != 'true'
-        run: cytrus-v6 download -g dofus -s "Dofus.exe,*.dll,Dofus_Data/*,Dofus_Data/il2cpp_data/**/*,Dofus_Data/Plugins/**/*,Dofus_Data/Resources/**/*" -o dofus
+        run: cytrus-v6 download --game dofus --release dofus3 -s "Dofus.exe,*.dll,Dofus_Data/*,Dofus_Data/il2cpp_data/**/*,Dofus_Data/Plugins/**/*,Dofus_Data/Resources/**/*" -o dofus
 
       - name: Extract BepInEx
         if: steps.cache-game-files.outputs.cache-hit != 'true'

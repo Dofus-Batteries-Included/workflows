@@ -67,18 +67,13 @@ jobs:
         with:
           node-version: latest
 
-      - name: Setup Github NPM registry for @dofus-batteries-included namespace
-        run: |
-          echo @dofus-batteries-included:registry=https://npm.pkg.github.com > ~/.npmrc
-          echo //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }} >> ~/.npmrc
-
       - name: Install Cytrus v6
-        run: npm i @dofus-batteries-included/cytrus-v6 -g
+        run: npm i cytrus-v6 -g
 
       - name: Read current game version
         id: fetch_dofus_version
         run: |
-          $CytrusGameVersion=$(cytrus-v6 version -g dofus)
+          $CytrusGameVersion=$(cytrus-v6 version --game dofus --release dofus3)
           $Version=$CytrusGameVersion.Split("_")[1]
           echo "Current game version: $Version." >> $Env:GITHUB_STEP_SUMMARY
           echo "dofus_version=$Version" >> $Env:GITHUB_OUTPUT
